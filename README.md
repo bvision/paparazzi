@@ -1,1 +1,1 @@
-empty :)
+jQuery plugin for taking photos using the device webcam
