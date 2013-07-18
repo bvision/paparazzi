@@ -3,10 +3,22 @@
   <head>
     <style>
 
+      body {
+        width: 960px;
+        margin: 0 auto;
+        text-align: center;
+        padding-top: 40px;
+      }
+
+      button {
+        padding: 10px 20px;
+        margin-bottom: 10px;
+      }
+
       .paparazzi video,
       .paparazzi img {
-        margin: 0 0 0 5px;
-        border: 2px solid green;
+        margin: 0 5px;
+        border: 1px solid #666;
         display: inline;
         width: 320px;
         height: 240px;
@@ -27,14 +39,12 @@
     <script>
       //enjoy
       $(function () {
-        var
-          $photographer = $( '.paparazziContainer' ).createPaparazzi({ 
-            $button: $( 'button' ),
-            success: function( result ) { console.log( 'ok', result.dataUrl );},
-            error: function( error ) { console.log( 'error', error ); }
-          });
+        $( '.paparazziContainer' ).paparazzi({
+          $button: $( 'button' ),
+          success: function( result ) { console.log( 'ok' );},
+          error: function( error ) { console.log( 'error', error ); }
+        });
       });
-
     </script>  
   </body>
 </html>

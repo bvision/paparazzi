@@ -1,90 +1,96 @@
 //bypeb!
-(function($) {/*
-var paparazzi = paparazzi || {};
+(function($) {
 
-paparazzi.createPaparazzi = */
-$.fn.createPaparazzi = function( config ) {
-  return this.each( function () {
-      var
-        paparazziTemplate = '' +
+var
+  paparazziTemplate = '' +
           '<div class="paparazzi">\n' +
           '  <video autoplay></video>\n' +
           '  <img src="">\n' +      
           '  <canvas></canvas>\n' +
           '</div>',
-        hasGetUserMedia = false,
-        $container = $( this ),
-        html = paparazziTemplate,
-        $paparazzi,
+  hasGetUserMedia,
+  dummyCallback = function () {},
+  Paparazzi;
 
-        $video,
-        $img,
-        $canvas,
+//detect getUserMedia support
+navigator.getUserMedia =  ( navigator.getUserMedia ||
+                            navigator.webkitGetUserMedia ||
+                            navigator.mozGetUserMedia ||
+                            navigator.msGetUserMedia );
+hasGetUserMedia = !!navigator.getUserMedia;
 
-        video,
-        img,
-        canvas,
-        ctx;
+Paparazzi = function ($container, config) {
 
-      navigator.getUserMedia =  ( navigator.getUserMedia ||
-                                  navigator.webkitGetUserMedia ||
-                                  navigator.mozGetUserMedia ||
-                                  navigator.msGetUserMedia );
-      hasGetUserMedia = !!navigator.getUserMedia;
+  config.success = config.success || dummyCallback;
+  config.error = config.error || dummyCallback;
 
-      function takePhoto ( config ) {
-        if (  hasGetUserMedia && config.success ) {
-            ctx.drawImage( video, 0, 0 );
-            config.success({ dataUrl: canvas.toDataURL() });
-            img.src = canvas.toDataURL();
-        } else { config.error && config.error( 'no Media' ); }
+  if (!hasGetUserMedia) {
+    config.error("Not supported");
+    return;
+  }
 
-        return this;
-      };
-
-      function initialize( config ) {
-
-        //rendering
-        $container.html( html );
-
-        //detections
-        $paparazzi = $( 'div.paparazzi', $container );
-
-        $video = $( 'video', $paparazzi );
-        $img = $( 'img', $paparazzi );
-        $canvas = $( 'canvas', $paparazzi );
-
-        video = $video[ 0 ];
-        img = $img[ 0 ];
-        canvas = $canvas[ 0 ];
-
-        ctx = canvas.getContext('2d');
-
-
-        if (  hasGetUserMedia ) {
-          navigator.getUserMedia( { video: true }, function ( stream ) {
-            video.src = window.URL.createObjectURL( stream );
-            setTimeout(function () {
-              canvas.width = video.videoWidth;
-              canvas.height = video.videoHeight;
-          }, 100);
-
-          }, function ( err ) { config.error && config.error( err ); } );
-
-        } else { config.error && config.error( 'no Media' ); }    
-      } 
-
-      initialize();
-
-      config.$button.on( 'click', function () { takePhoto( config ); } );
-
-     //$container.takePhoto = takePhoto; 
-     /* $container.paparazzi = {
-        takePhoto: takePhoto
-        //TODO: add destroy, destroy, at the end must do: delete $container.paparazzi
-      };*/
-  });
-
-
+  this.$container = $container;
+  this.config = config;
+  this.initialize();
 };
+
+$.extend(Paparazzi.prototype, {
+
+  initialize: function () {
+    var $paparazzi, video, img, canvas,
+        config = this.config,
+        that = this;
+
+    //rendering
+    this.$container.html( paparazziTemplate );
+
+    //detections
+    $paparazzi = $( 'div.paparazzi', this.$container );
+    video = this.video = $( 'video', $paparazzi )[0];
+    img = this.img = $( 'img', $paparazzi )[0];
+    canvas = this.canvas = $( 'canvas', $paparazzi )[0];
+    
+    this.ctx = canvas.getContext('2d'),
+
+    navigator.getUserMedia( { video: true }, function ( stream ) {
+      video.src = window.URL.createObjectURL( stream );
+
+      //set canvas width and height to match video source dimensions
+      setTimeout(function () {
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+      }, 100);
+
+      config.$button.on( 'click', function () {
+        that.takePhoto();
+      } );
+
+    }, config.error);
+  
+  },
+
+  takePhoto: function () {
+    var dataUrl;
+    this.ctx.drawImage( this.video, 0, 0 );
+    dataUrl = this.canvas.toDataURL();
+    this.img.src = dataUrl;
+    this.config.success({ dataUrl: dataUrl });
+  }
+
+});
+
+//expose Paparazzi constructor
+window.Paparazzi = Paparazzi;
+
+$.fn.paparazzi = function( config ) {
+  return this.each( function () {
+      var $this = $(this),
+          data = $this.data('paparazzi');
+
+      if (!data) {
+        $this.data("paparazzi", new Paparazzi($this, config));
+      }
+  });
+};
+
 } ( jQuery ));
