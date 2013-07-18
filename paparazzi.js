@@ -6,24 +6,15 @@ paparazzi.createPaparazzi = */
 $.fn.createPaparazzi = function( config ) {
   return this.each( function () {
       var
-        //_ = config._ || window._ , saco dependencia underscore
         paparazziTemplate = '' +
           '<div class="paparazzi">\n' +
-          '  <div class="video">\n' +
-          '    <video autoplay></video>\n' +
-          '    <div class="hotspot"></div>\n' +
-          '  </div>\n' +
-          '  <canvas></canvas>\n' +
+          '  <video autoplay></video>\n' +
           '  <img src="">\n' +      
+          '  <canvas></canvas>\n' +
           '</div>',
-        getMedia =  navigator.getMedia =  ( navigator.getUserMedia ||
-                    navigator.webkitGetUserMedia ||
-                    navigator.mozGetUserMedia ||
-                    navigator.msGetUserMedia ),
-        hasGetUserMedia = !!getMedia,
+        hasGetUserMedia = false,
         $container = $( this ),
-        //htmlId = config.id || 'papparazzi-314',//TODO: sacar id, ubicar por padre
-        html = paparazziTemplate,//_.template( paparazziTemplate, { id: htmlId }),
+        html = paparazziTemplate,
         $paparazzi,
 
         $video,
@@ -33,31 +24,17 @@ $.fn.createPaparazzi = function( config ) {
         video,
         img,
         canvas,
-        ctx,
-        $hotspot,
-        dragging = false,
-        clipper = {
-          sx: 0,
-          sy: 0,
-          swidth: 240,
-          sheight: 180,
-          x: 0,
-          y: 0,
-          width: 200,
-          height: 100
-        };
+        ctx;
+
+      navigator.getUserMedia =  ( navigator.getUserMedia ||
+                                  navigator.webkitGetUserMedia ||
+                                  navigator.mozGetUserMedia ||
+                                  navigator.msGetUserMedia );
+      hasGetUserMedia = !!navigator.getUserMedia;
 
       function takePhoto ( config ) {
         if (  hasGetUserMedia && config.success ) {
-            ctx.drawImage( video, 
-              clipper.sx,
-              clipper.sy,
-              clipper.swidth,
-              clipper.sheight,
-              clipper.x,
-              clipper.y,
-              clipper.width,
-              clipper.height );
+            ctx.drawImage( video, 0, 0 );
             config.success({ dataUrl: canvas.toDataURL() });
             img.src = canvas.toDataURL();
         } else { config.error && config.error( 'no Media' ); }
@@ -73,40 +50,11 @@ $.fn.createPaparazzi = function( config ) {
         //detections
         $paparazzi = $( 'div.paparazzi', $container );
 
-        $video = $( '.video', $paparazzi );
+        $video = $( 'video', $paparazzi );
         $img = $( 'img', $paparazzi );
         $canvas = $( 'canvas', $paparazzi );
 
-        $hotspot = $( '.hotspot', $paparazzi );
-
-        $hotspot.on( 'mousedown', function () {
-          dragging = true;
-        });
-
-        $video.on( 'mousemove', function ( e ) {
-          var
-            x = e.pageX - 60,
-            y = e.pageY - 45,
-            minx = 0,
-            miny = 0,
-            maxx = 300,
-            maxy = 250;
-
-          if ( dragging && x > minx && y > miny && x < maxx && y < maxy ) {
-            $hotspot.offset({
-              left: x ,//todo:calibrar
-              top: y //todo:calibrar
-            });
-            clipper.sx = ( x ) * 1.35; //todo:calibrar
-            clipper.sy = ( y  ) * 1.75;//todo:calibrar
-          }
-        });
-
-        $('body').on( 'mouseup', function () {
-          dragging = false;
-        });
-
-        video = $video.find('video')[ 0 ];
+        video = $video[ 0 ];
         img = $img[ 0 ];
         canvas = $canvas[ 0 ];
 
@@ -114,8 +62,13 @@ $.fn.createPaparazzi = function( config ) {
 
 
         if (  hasGetUserMedia ) {
-          navigator.getMedia( { video: true }, function ( stream ) {
+          navigator.getUserMedia( { video: true }, function ( stream ) {
             video.src = window.URL.createObjectURL( stream );
+            setTimeout(function () {
+              canvas.width = video.videoWidth;
+              canvas.height = video.videoHeight;
+          }, 100);
+
           }, function ( err ) { config.error && config.error( err ); } );
 
         } else { config.error && config.error( 'no Media' ); }    

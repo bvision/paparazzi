@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+
+      .paparazzi video,
+      .paparazzi img {
+        margin: 0 0 0 5px;
+        border: 2px solid green;
+        display: inline;
+        width: 320px;
+        height: 240px;
+      }
+
+      .paparazzi canvas {
+        display: none;
+      }
+
+    </style>
+  </head>
+  <body>
+    <button>Take photo</button>
+    <div class="paparazziContainer"></div>
+
+    <script src="jquery-1.10.0.min.js"></script>
+    <script src="../paparazzi.js?v=0"></script>
+    <script>
+      //enjoy
+      $(function () {
+        var
+          $photographer = $( '.paparazziContainer' ).createPaparazzi({ 
+            $button: $( 'button' ),
+            success: function( result ) { console.log( 'ok', result.dataUrl );},
+            error: function( error ) { console.log( 'error', error ); }
+          });
+      });
+
+    </script>  
+  </body>
+</html>
